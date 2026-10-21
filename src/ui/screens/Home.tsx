@@ -6,6 +6,7 @@ import { AdSlot } from '../../monetization';
 import type { SharedResult } from '../../share/share';
 import { Icon, LogoMark } from '../components/Icon';
 import { eur } from '../format';
+import { BUILD_ID } from '../diagnostics';
 
 const strip = (t: string) => t.replace(/\{([^{}|]*)\|[^{}|]*\}/g, '$1');
 
@@ -78,6 +79,7 @@ export function Home({ saved, shared, storageOk, onNew, onResume, onRules, onSet
       <footer className="footer">
         Jeu de fiction gratuit, sans inscription. Les montants sont simplifiés et ne constituent pas un conseil financier.
         <br />Sauvegarde locale sur cet appareil uniquement (aucune synchronisation entre appareils).
+        <br /><span className="num">Version {BUILD_ID}</span>
       </footer>
     </div>
   );

@@ -31,6 +31,7 @@ npm run dev          # serveur de développement : http://localhost:5173
 npm test             # tests automatisés (Vitest)
 npm run typecheck    # vérification TypeScript
 npm run build        # compilation de production dans dist/
+npm run build:single # page autonome en un seul fichier (dist-single/), pour les Artifacts Claude ou un usage hors ligne
 npm run preview      # sert le build localement : http://localhost:4173
 npm run e2e          # parcours de bout en bout dans Chromium (nécessite Playwright et un build)
 npm run balance      # rapport d'équilibrage (156 parties simulées par des bots)
@@ -85,6 +86,13 @@ Activez-le une fois : dépôt → **Settings → Pages → Source : GitHub Actio
 
 ### Option 4 — Manuel
 `npm run build` puis déposez le contenu de `dist/` sur n’importe quel hébergement statique (ou glissez-déposez le dossier sur app.netlify.com/drop).
+
+### Option 5 — Artifact Claude ou fichier unique
+`npm run build:single` produit `dist-single/index.html` (page complète, jouable même ouverte en local) et `dist-single/artifact.html` (même contenu au format Artifact : CSS et JavaScript intégrés, sans fichier séparé, comme l’exige la plateforme).
+
+## Diagnostic en cas de problème
+
+Ajoute `#diagnostic` à la fin de l’adresse du jeu, ou active **Paramètres → Afficher le diagnostic**. Un panneau affiche la version chargée (aussi visible en bas de l’accueil), l’environnement (cadre, stockage, navigateur) et le journal des clics, écrans et erreurs. Le bouton « Copier » permet de transmettre ce journal.
 
 ## Monétisation (future)
 

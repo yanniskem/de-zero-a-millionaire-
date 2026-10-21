@@ -5,6 +5,7 @@ import { checkInvariants } from '../engine/validate';
 import { deleteSave, getStorage, loadGame, loadSettings, saveGame, saveSettings, type Settings } from '../save/storage';
 import { decodeResult } from '../share/share';
 import { ConfirmDialog } from './components/common';
+import { diag, DiagnosticsPanel, useDiagnosticsEnabled } from './diagnostics';
 import { ErrorBoundary } from './ErrorBoundary';
 import { GameContext, type GameApi } from './GameContext';
 import { Create } from './screens/Create';
@@ -61,7 +62,11 @@ export function App() {
     if (game?.phase === 'ended' && screen === 'game') setScreen('ending');
   }, [game, screen]);
 
-  useEffect(() => window.scrollTo({ top: 0 }), [screen]);
+  useEffect(() => {
+    diag('écran', screen);
+    window.scrollTo({ top: 0 });
+  }, [screen]);
+  const showDiagnostics = useDiagnosticsEnabled(settings.diagnostics);
 
   // Toute erreur JavaScript non interceptée est signalée au joueur au lieu de passer inaperçue.
   useEffect(() => {
@@ -92,7 +97,9 @@ export function App() {
   }, [game, toast]);
 
   const startGame = (o: { name: string; gender: Gender; profileId: string; seed: number; length: GameLength }) => {
-    setGame(createGame(o));
+    const created = createGame(o);
+    diag('partie créée', `${created.name}, ${created.age} ans, profil ${created.profileId}, premier événement ${created.eventQueue[0]?.eventId}`);
+    setGame(created);
     setPendingStart(null);
     setLoadError(null);
     setScreen('game');
@@ -131,7 +138,7 @@ export function App() {
             </p>
           </div>
         )}
-        <Home saved={game} shared={shared} storageOk={storageOk} onNew={() => setScreen('create')} onResume={() => setScreen(game?.phase === 'ended' ? 'ending' : 'game')}
+        <Home saved={game} shared={shared} storageOk={storageOk} onNew={() => { diag('action', 'Commencer ma vie → écran de création'); setScreen('create'); }} onResume={() => setScreen(game?.phase === 'ended' ? 'ending' : 'game')}
           onRules={() => open('rules')} onSettings={() => open('settings')} />
       </>
     );
@@ -157,6 +164,7 @@ export function App() {
           onCancel={() => setConfirmDelete(false)}
           onConfirm={() => { deleteSave(); setGame(null); setConfirmDelete(false); toast('Sauvegarde effacée.', 'ok'); }} />
       )}
+      {showDiagnostics && <DiagnosticsPanel screen={screen} />}
       <div className="toast-zone" aria-live="polite" role="status">
         {toasts.map((t) => <div key={t.id} className={`toast ${t.tone}`}>{t.message}</div>)}
       </div>

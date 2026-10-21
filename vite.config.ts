@@ -22,8 +22,11 @@ function classicScript(): Plugin {
 
 // base './' : le build fonctionne aussi bien à la racine d'un domaine (Vercel, Netlify)
 // que dans un sous-dossier (GitHub Pages).
+const BUILD_ID = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
 export default defineConfig({
   base: './',
+  define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   plugins: [react(), classicScript()],
   build: {
     chunkSizeWarningLimit: 800,

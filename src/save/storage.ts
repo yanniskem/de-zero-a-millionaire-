@@ -124,9 +124,10 @@ export interface Settings {
   reduceMotion: boolean;
   largeText: boolean;
   showDetails: boolean;
+  diagnostics: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { reduceMotion: false, largeText: false, showDetails: true };
+export const DEFAULT_SETTINGS: Settings = { reduceMotion: false, largeText: false, showDetails: true, diagnostics: false };
 
 export function loadSettings(storage: StorageLike | null = getStorage()): Settings {
   try {

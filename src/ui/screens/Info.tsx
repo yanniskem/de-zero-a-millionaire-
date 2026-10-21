@@ -54,6 +54,7 @@ export function SettingsScreen({ settings, onChange, onBack, onDeleteSave, hasSa
           ['reduceMotion', 'Réduire les animations', 'Supprime les transitions et effets de mouvement.'],
           ['largeText', 'Texte plus grand', 'Augmente la taille du texte dans tout le jeu.'],
           ['showDetails', 'Afficher le détail des calculs', 'Montre les explications sous chaque ligne du bilan annuel.'],
+          ['diagnostics', 'Afficher le diagnostic', 'Panneau technique : version chargée, clics reçus, écrans affichés et erreurs. Utile pour signaler un problème.'],
         ] as const).map(([k, label, desc]) => (
           <label key={k} className="switch">
             <span><strong>{label}</strong><br /><small className="muted">{desc}</small></span>

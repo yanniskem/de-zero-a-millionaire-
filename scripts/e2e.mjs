@@ -2,7 +2,7 @@
 // Usage : npm run build && npm run e2e   (ou E2E_URL=https://... npm run e2e pour tester une URL publique)
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
 let chromium;
@@ -137,6 +137,12 @@ try {
     await frame.getByRole('button', { name: /Commencer ma vie/ }).first().waitFor();
     return frame;
   });
+  if (!process.env.E2E_URL && existsSync('dist-single/index.html')) {
+    await firstDecision('fichier unique dist-single (file://)', async (page) => {
+      await page.goto('file://' + process.cwd() + '/dist-single/index.html');
+      return page;
+    });
+  }
   if (!process.env.E2E_URL) {
     await firstDecision('fichier local (file://)', async (page) => {
       await page.goto('file://' + process.cwd() + '/dist/index.html');
