@@ -113,7 +113,36 @@ async function scenario(name, viewport) {
   await ctx.close();
 }
 
+/** Accueil → Commencer ma vie → création → première décision, dans un contexte donné (cadre isolé, fichier local…). */
+async function firstDecision(name, open) {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  const root = await open(page);
+  await root.getByRole('button', { name: /Commencer ma vie/ }).first().click();
+  check(await root.getByRole('heading', { name: /Qui seras-tu/ }).isVisible(), `[${name}] « Commencer ma vie » ouvre la création du personnage`);
+  await root.getByRole('button', { name: /Commencer ma vie/ }).click();
+  await root.getByRole('dialog').waitFor();
+  await root.locator('.choice:not([aria-disabled="true"])').first().click();
+  check(await root.getByText('Ton choix').isVisible(), `[${name}] la première décision est appliquée`);
+  check(errors.length === 0, `[${name}] aucune erreur JavaScript${errors.length ? ' : ' + errors.join(' | ') : ''}`);
+  await ctx.close();
+}
+
 try {
+  await firstDecision('cadre isolé (origine opaque)', async (page) => {
+    await page.setContent(`<iframe sandbox="allow-scripts" src="${url}" style="width:390px;height:844px;border:0"></iframe>`);
+    const frame = page.frameLocator('iframe');
+    await frame.getByRole('button', { name: /Commencer ma vie/ }).first().waitFor();
+    return frame;
+  });
+  if (!process.env.E2E_URL) {
+    await firstDecision('fichier local (file://)', async (page) => {
+      await page.goto('file://' + process.cwd() + '/dist/index.html');
+      return page;
+    });
+  }
   await scenario('mobile', { width: 390, height: 844 });
   await scenario('ordinateur', { width: 1366, height: 900 });
 } catch (e) {

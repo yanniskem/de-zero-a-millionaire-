@@ -5,6 +5,7 @@ import { checkInvariants } from '../engine/validate';
 import { deleteSave, getStorage, loadGame, loadSettings, saveGame, saveSettings, type Settings } from '../save/storage';
 import { decodeResult } from '../share/share';
 import { ConfirmDialog } from './components/common';
+import { ErrorBoundary } from './ErrorBoundary';
 import { GameContext, type GameApi } from './GameContext';
 import { Create } from './screens/Create';
 import { Ending } from './screens/Ending';
@@ -61,6 +62,18 @@ export function App() {
   }, [game, screen]);
 
   useEffect(() => window.scrollTo({ top: 0 }), [screen]);
+
+  // Toute erreur JavaScript non interceptée est signalée au joueur au lieu de passer inaperçue.
+  useEffect(() => {
+    const onError = (e: ErrorEvent) => toast(`Erreur inattendue : ${e.message}`, 'err');
+    const onRejection = (e: PromiseRejectionEvent) => toast(`Erreur inattendue : ${String(e.reason?.message ?? e.reason)}`, 'err');
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onRejection);
+    };
+  }, [toast]);
 
   const run = useCallback<GameApi['run']>((fn, opts) => {
     if (!game) return false;
@@ -126,7 +139,9 @@ export function App() {
 
   return (
     <>
-      {content}
+      <ErrorBoundary key={screen} onReset={() => setScreen('home')} onClearSave={() => { deleteSave(); setGame(null); }}>
+        {content}
+      </ErrorBoundary>
       {pendingStart && game && (
         <ConfirmDialog
           title="Écraser la partie en cours ?"

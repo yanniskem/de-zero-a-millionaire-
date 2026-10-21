@@ -52,8 +52,12 @@ export function makeRng(seed: number): Rng {
 }
 
 export function randomSeed(): number {
-  if (typeof crypto !== 'undefined' && 'getRandomValues' in crypto) {
-    return crypto.getRandomValues(new Uint32Array(1))[0];
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+      return crypto.getRandomValues(new Uint32Array(1))[0];
+    }
+  } catch {
+    // API indisponible ou bloquée (contexte restreint) : repli ci-dessous.
   }
   return Math.floor(Math.random() * 2 ** 32);
 }

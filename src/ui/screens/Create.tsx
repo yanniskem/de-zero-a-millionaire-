@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PROFILES } from '../../content/profiles';
 import { EDUCATION_LABELS, HOUSING_BY_ID, SKILL_LABELS, jobTitle } from '../../engine/catalog';
 import { fillText } from '../../engine/events';
@@ -20,6 +20,14 @@ export function Create({ onBack, onStart }: { onBack: () => void; onStart: (opts
   const [seed, setSeed] = useState(randomSeed);
   const [length, setLength] = useState<GameLength>('normale');
 
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  // À l'ouverture de l'écran : on remonte en haut et on place le focus sur le titre
+  // (le changement d'écran est ainsi visible et annoncé aux lecteurs d'écran).
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+    titleRef.current?.focus();
+  }, []);
+
   const preview = useMemo(() => createGame({ name: name || 'Alex', gender, profileId, seed, length }), [name, gender, profileId, seed, length]);
   const profile = PROFILES.find((p) => p.id === profileId)!;
   const trimmed = name.trim();
@@ -34,7 +42,7 @@ export function Create({ onBack, onStart }: { onBack: () => void; onStart: (opts
     <div className="container page">
       <header className="page-header">
         <button className="btn btn-ghost btn-sm" onClick={onBack} aria-label="Retour à l’accueil"><Icon name="back" /></button>
-        <h1>Qui seras-tu ?</h1>
+        <h1 ref={titleRef} tabIndex={-1} style={{ outline: 'none' }}>Qui seras-tu ?</h1>
       </header>
 
       <div className="stack">

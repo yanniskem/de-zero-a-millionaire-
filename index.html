@@ -12,7 +12,12 @@
     <title>De zéro à millionnaire</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Remplacé par le jeu dès que le script démarre. Reste visible seulement si le script ne peut pas se charger. -->
+    <div id="root">
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;background:#0a0c11;color:#eee9df;font-family:system-ui,sans-serif">
+        <p>Chargement de <strong>De zéro à millionnaire</strong>…<br /><small style="color:#9aa1b0">Si ce message reste affiché, le navigateur a bloqué le script du jeu : ouvre le jeu depuis son adresse web (pas en fichier local) avec un navigateur à jour.</small></p>
+      </div>
+    </div>
     <noscript>Ce jeu nécessite JavaScript pour fonctionner.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>

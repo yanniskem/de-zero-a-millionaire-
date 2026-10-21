@@ -42,22 +42,22 @@ export function Home({ saved, shared, storageOk, onNew, onResume, onRules, onSet
         )}
 
         <div className="home-actions">
-          <button className="btn btn-primary btn-lg" onClick={onNew}>
+          <button type="button" className="btn btn-primary btn-lg" onClick={onNew} data-testid="start-life">
             <Icon name="play" /> Commencer ma vie
           </button>
           {saved && saved.phase !== 'ended' && (
-            <button className="btn btn-lg" onClick={onResume}>
+            <button type="button" className="btn btn-lg" onClick={onResume}>
               <Icon name="refresh" /> Reprendre — {saved.name}, {saved.age} ans
             </button>
           )}
           {saved && saved.phase === 'ended' && (
-            <button className="btn btn-lg" onClick={onResume}>
+            <button type="button" className="btn btn-lg" onClick={onResume}>
               <Icon name="trophy" /> Revoir le bilan de {saved.name}
             </button>
           )}
           <div className="btn-row" style={{ justifyContent: 'center' }}>
-            <button className="btn btn-ghost" onClick={onRules}><Icon name="book" /> Règles du jeu</button>
-            <button className="btn btn-ghost" onClick={onSettings}><Icon name="settings" /> Paramètres</button>
+            <button type="button" className="btn btn-ghost" onClick={onRules}><Icon name="book" /> Règles du jeu</button>
+            <button type="button" className="btn btn-ghost" onClick={onSettings}><Icon name="settings" /> Paramètres</button>
           </div>
         </div>
 
