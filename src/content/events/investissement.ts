@@ -1,0 +1,320 @@
+// Épargne et investissements. Rien n'est garanti : les marchés montent et descendent.
+
+import type { GameEvent } from '../../engine/eventTypes';
+import { eur, liquid, nw, roll } from './helpers';
+
+export const INVEST_EVENTS: GameEvent[] = [
+  {
+    id: 'inv_crypto_ami',
+    category: 'investissement',
+    title: 'Le tuyau crypto',
+    text: 'Ton ami Kevin a « multiplié par dix » sa mise sur une petite cryptomonnaie. Il en a trouvé une nouvelle « encore plus prometteuse ».',
+    minAge: 18, maxAge: 55,
+    cooldown: 10,
+    when: (s) => s.cash >= 800,
+    choices: [
+      {
+        id: 'petit',
+        label: 'Miser 500 €',
+        hint: 'Une somme que tu peux perdre.',
+        cost: 500,
+        outcome: roll(0.3,
+          { text: 'Le jeton s’envole ! Tu revends au bon moment.', fx: { delayed: [{ years: 1, title: 'Le jeton de Kevin', text: 'Ta mise de 500 € vaut désormais 2 300 €. Tu encaisses.', fx: { money: 2300, happiness: 4 } }] } },
+          { text: 'Tu achètes. Le cours fait le yoyo.', fx: { delayed: [{ years: 1, title: 'Le jeton de Kevin', text: 'Le projet a été abandonné par ses créateurs. Ta mise ne vaut plus rien.', fx: { happiness: -2, skills: { finance: 3 } } }] } }),
+      },
+      {
+        id: 'gros',
+        label: 'Miser gros : 5 000 €',
+        hint: 'Tout ou rien.',
+        cost: 5000,
+        outcome: roll(0.2,
+          { text: 'Tu mets le paquet. Le cours grimpe de semaine en semaine…', fx: { delayed: [{ years: 1, title: 'Le pari crypto', text: 'Incroyable : tes 5 000 € en valent 26 000 ! Tu vends tout.', fx: { money: 26000, happiness: 10, highlight: { kind: 'success', text: 'Coup de poker gagnant en cryptomonnaie' } } }] } },
+          { text: 'Tu mets le paquet. Les premiers jours sont euphoriques…', fx: { delayed: [{ years: 1, title: 'Le pari crypto', text: 'Le jeton s’est effondré de 95 %. Il te reste 250 €.', fx: { money: 250, happiness: -10, skills: { finance: 6 }, highlight: { kind: 'mistake', text: 'Perte de 5 000 € sur une cryptomonnaie douteuse' } } }] } }),
+      },
+      {
+        id: 'non',
+        label: 'Décliner',
+        outcome: { text: 'Kevin te traite de dinosaure. Tu dors tranquille.', fx: { skills: { finance: 1 } } },
+      },
+    ],
+  },
+  {
+    id: 'inv_krach',
+    category: 'investissement',
+    title: 'Le krach boursier',
+    text: 'Les marchés s’effondrent : -30 % en quelques semaines. Les journaux parlent de « lundi noir ». Ton portefeuille est dans le rouge vif.',
+    cooldown: 9,
+    when: (s) => s.stocks >= 2000,
+    choices: [
+      {
+        id: 'vendre',
+        label: 'Tout vendre pour limiter la casse',
+        hint: 'Transformer une perte virtuelle en perte réelle.',
+        outcome: (s) => ({ text: `Tu vends tout au plus bas, soit environ ${eur(s.stocks * 0.7)}. Les marchés remonteront peut-être… sans toi.`, fx: { stocksPct: -30, sellStocksPct: 100, happiness: -4, highlight: { kind: 'mistake', text: 'Vente paniquée en plein krach boursier' } } }),
+      },
+      {
+        id: 'tenir',
+        label: 'Ne rien faire et attendre',
+        hint: 'Le temps est l’ami de l’investisseur… en général.',
+        outcome: { text: 'Tu fermes l’application et tu attends. C’est dur à regarder, mais tu tiens.', fx: { stocksPct: -30, skills: { finance: 4 }, happiness: -3, delayed: [{ years: 2, title: 'La reprise des marchés', text: 'Les marchés ont effacé une grande partie de leurs pertes. Ta patience est récompensée.', fx: { stocksPct: 28 } }] } },
+      },
+      {
+        id: 'acheter',
+        label: 'Acheter davantage à prix cassé',
+        hint: 'Investir 3 000 € de plus pendant la panique.',
+        requires: (s) => liquid(s) >= 3000,
+        requiresText: 'Il te faut 3 000 € (argent disponible + épargne).',
+        outcome: { text: 'Tu achètes quand tout le monde vend. Ton cœur bat fort.', fx: { stocksPct: -30, savings: -3000, stocks: 3000, skills: { finance: 6 }, delayed: [{ years: 2, title: 'La reprise des marchés', text: 'Les marchés ont rebondi : tes achats au plus bas ont fortement progressé.', fx: { stocksPct: 32 } }] } },
+      },
+    ],
+  },
+  {
+    id: 'inv_conseiller_banque',
+    category: 'investissement',
+    title: 'Le produit maison',
+    text: 'Ton conseiller bancaire t’invite à un rendez-vous « patrimonial ». Il te propose un contrat maison avec 3 % de frais d’entrée et 2 % de frais annuels.',
+    minAge: 22,
+    cooldown: 12,
+    when: (s) => s.savings >= 5000,
+    choices: [
+      {
+        id: 'signer',
+        label: 'Signer pour 5 000 €',
+        hint: 'Il a l’air sûr de lui.',
+        outcome: { text: 'Tu signes. Les frais rongeront silencieusement ton rendement.', fx: { savings: -5000, stocks: 4850, flags: { produitMaison: true }, delayed: [{ years: 5, title: 'Les frais du produit maison', text: 'En relisant ton relevé, tu réalises que les frais ont absorbé une grande partie des gains.', fx: { stocksPct: -6, skills: { finance: 4 } } }] } },
+      },
+      {
+        id: 'etf',
+        label: 'Ouvrir plutôt un compte et acheter des fonds indiciels peu chers',
+        outcome: { text: 'Tu remercies ton conseiller et investis 5 000 € par toi-même dans des fonds à frais réduits.', fx: { savings: -5000, stocks: 5000, skills: { finance: 5 } } },
+      },
+      {
+        id: 'rien',
+        label: 'Garder ton livret',
+        outcome: { text: 'Pas de risque, pas de frais. Ton argent dort tranquille.' },
+      },
+    ],
+  },
+  {
+    id: 'inv_ponzi',
+    category: 'investissement',
+    title: 'Le placement miracle',
+    text: 'Un collègue t’explique son placement : 3 % de rendement… par mois, garanti. Il montre les virements reçus. Il cherche de nouveaux « partenaires ».',
+    rare: true,
+    minAge: 22,
+    when: (s) => liquid(s) >= 3000,
+    choices: [
+      {
+        id: 'investir',
+        label: 'Investir 3 000 €',
+        cost: 3000,
+        outcome: { text: 'Les premiers mois, tu reçois tes « intérêts ». Tu en parles même à tes amis.', fx: { money: 600, delayed: [{ years: 2, eventId: 'suite_ponzi' }] } },
+      },
+      {
+        id: 'refuser',
+        label: 'Refuser : trop beau pour être vrai',
+        outcome: { text: 'Aucun placement honnête ne garantit 3 % par mois. Tu passes ton chemin.', fx: { skills: { finance: 3 } } },
+      },
+      {
+        id: 'signaler',
+        label: 'Signaler le placement à l’AMF',
+        outcome: { text: 'Tu signales l’arnaque à l’Autorité des marchés financiers. Quelques mois plus tard, le réseau est démantelé.', fx: { skills: { finance: 3 }, network: 2, moral: 'good' } },
+      },
+    ],
+  },
+  {
+    id: 'inv_premier_placement',
+    category: 'investissement',
+    title: 'Faire travailler son épargne',
+    text: (s) => `Ton épargne atteint ${eur(s.savings)}, mais le livret rapporte moins que l’inflation certaines années. Un ami te parle des fonds indiciels qui suivent la bourse mondiale.`,
+    minAge: 20,
+    when: (s) => s.savings >= 3000 && s.stocks === 0,
+    choices: [
+      {
+        id: 'investir',
+        label: 'Investir 2 000 € en fonds indiciels',
+        hint: 'Rendement moyen d’environ 6 % par an sur le long terme, avec des années négatives.',
+        outcome: { text: 'Tu passes ton premier ordre de bourse. Ton argent est désormais investi dans des milliers d’entreprises.', fx: { savings: -2000, stocks: 2000, skills: { finance: 4 }, flags: { premierInvestissement: true } } },
+      },
+      {
+        id: 'apprendre',
+        label: 'Se former avant d’investir',
+        outcome: { text: 'Tu lis, tu compares, tu comprends le risque. Tu te sens prêt{|e} pour la suite.', fx: { skills: { finance: 6 } } },
+      },
+      {
+        id: 'livret',
+        label: 'Rester sur le livret',
+        outcome: { text: 'La bourse, c’est le casino, selon ton oncle. Tu restes prudent{|e}.' },
+      },
+    ],
+  },
+  {
+    id: 'inv_euphorie',
+    category: 'investissement',
+    title: 'L’euphorie des marchés',
+    text: 'Les marchés battent record sur record. Ton portefeuille a pris 25 % cette année. Tout le monde au bureau parle bourse.',
+    cooldown: 8,
+    when: (s) => s.stocks >= 5000,
+    choices: [
+      {
+        id: 'encaisser',
+        label: 'Prendre une partie des bénéfices',
+        outcome: { text: 'Tu vends un tiers de tes positions et sécurises une partie de tes gains.', fx: { stocksPct: 15, sellStocksPct: 33, skills: { finance: 3 } } },
+      },
+      {
+        id: 'tenir',
+        label: 'Garder le cap',
+        outcome: { text: 'Tu ne changes rien à ta stratégie. Ni euphorie, ni panique.', fx: { stocksPct: 15, skills: { finance: 2 } } },
+      },
+      {
+        id: 'credit',
+        label: 'Emprunter pour investir plus',
+        hint: 'Prêt de 10 000 € investi en bourse. Risqué.',
+        outcome: roll(0.45,
+          { text: 'Tu empruntes 10 000 € et les investis. Les marchés continuent de monter…', fx: { stocksPct: 15, addDebt: { kind: 'conso', label: 'Prêt pour investir', amount: 10000, rate: 0.065, years: 5 }, stocks: 10000, delayed: [{ years: 1, title: 'Le pari à crédit', text: 'Les marchés ont encore progressé : ton pari est gagnant.', fx: { stocksPct: 12 } }] } },
+          { text: 'Tu empruntes 10 000 € et les investis. Quelques mois plus tard, le vent tourne.', fx: { stocksPct: 15, addDebt: { kind: 'conso', label: 'Prêt pour investir', amount: 10000, rate: 0.065, years: 5 }, stocks: 10000, delayed: [{ years: 1, title: 'Le pari à crédit', text: 'Correction brutale des marchés. Tu dois rembourser un prêt sur un placement qui a fondu.', fx: { stocksPct: -22, happiness: -5, highlight: { kind: 'mistake', text: 'Emprunter pour investir au sommet' } } }] } }),
+      },
+    ],
+  },
+  {
+    id: 'inv_heritage_tante',
+    category: 'investissement',
+    title: 'L’héritage inattendu',
+    text: 'Une grand-tante que tu as peu connue t’a couché{|e} sur son testament. Le notaire t’annonce 25 000 €.',
+    rare: true,
+    minAge: 25, maxAge: 65,
+    choices: [
+      {
+        id: 'investir',
+        label: 'Tout investir pour le long terme',
+        outcome: { text: 'Tu places l’héritage en fonds indiciels. Ta grand-tante aurait aimé ta sagesse.', fx: { money: 25000, stocks: 25000, flags: { heritageTante: true } } },
+      },
+      {
+        id: 'dettes',
+        label: 'Rembourser tes dettes, épargner le reste',
+        outcome: { text: 'Tu soldes tes crédits à la consommation et mets le reste de côté. Quel soulagement.', fx: { money: 25000, repayDebts: 'conso', happiness: 6 } },
+      },
+      {
+        id: 'depenser',
+        label: 'Se faire plaisir',
+        outcome: { text: 'Voyage de rêve, voiture neuve, cadeaux : l’héritage s’évapore en deux ans.', fx: { money: 6000, happiness: 10, flags: { voiture: true } } },
+      },
+    ],
+  },
+  {
+    id: 'inv_crowdfunding',
+    category: 'investissement',
+    title: 'Le financement participatif immobilier',
+    text: 'Une plateforme propose de prêter à des promoteurs immobiliers : 10 % par an promis sur deux ans. Le risque de défaut existe.',
+    minAge: 23,
+    cooldown: 10,
+    when: (s) => liquid(s) >= 4000,
+    choices: [
+      {
+        id: 'investir',
+        label: 'Prêter 3 000 €',
+        cost: 3000,
+        outcome: roll(0.75,
+          { text: 'Ton argent finance un programme de logements.', fx: { delayed: [{ years: 2, title: 'Remboursement du projet immobilier', text: 'Le promoteur rembourse avec intérêts : 3 630 €.', fx: { money: 3630, skills: { finance: 2 } } }] } },
+          { text: 'Ton argent finance un programme de logements.', fx: { delayed: [{ years: 2, title: 'Défaut du promoteur', text: 'Le promoteur est en faillite. Tu récupères 1 100 € après des mois de procédure.', fx: { money: 1100, skills: { finance: 4 } } }] } }),
+      },
+      {
+        id: 'non',
+        label: 'Passer son tour',
+        outcome: { text: 'Tu préfères les placements que tu comprends.' },
+      },
+    ],
+  },
+  {
+    id: 'inv_fonds_urgence',
+    category: 'investissement',
+    title: 'Le matelas de sécurité',
+    text: 'Une collègue a perdu son emploi et a dû vendre sa voiture pour payer son loyer. Elle te conseille de garder trois à six mois de dépenses de côté.',
+    minAge: 20,
+    when: (s) => s.savings < 3000 && s.cash >= 1500,
+    choices: [
+      {
+        id: 'epargner',
+        label: 'Mettre en place un virement automatique de 150 € par mois',
+        outcome: { text: 'Un virement automatique part chaque mois vers ton livret. Tu ne le vois même plus passer.', fx: { savings: 500, skills: { finance: 3 }, flags: { autoEpargne: true } } },
+      },
+      {
+        id: 'plus_tard',
+        label: 'Tu verras plus tard',
+        outcome: { text: 'Tu remets ça à plus tard. Espérons que rien n’arrive.' },
+      },
+    ],
+  },
+  {
+    id: 'inv_loto',
+    category: 'investissement',
+    title: 'Le ticket gagnant',
+    text: 'Par habitude, tu achètes un ticket à gratter en payant ton pain. Tu grattes… et tu relis trois fois.',
+    rare: true,
+    choices: [
+      {
+        id: 'encaisser',
+        label: 'Encaisser les 5 000 € et rester discret',
+        outcome: { text: '5 000 € tombés du ciel. Tu n’en parles à personne et tu les mets de côté.', fx: { money: 5000, happiness: 6 } },
+      },
+      {
+        id: 'feter',
+        label: 'Inviter tous tes amis à fêter ça',
+        outcome: { text: 'Une soirée légendaire. Il reste 3 500 € après la fête.', fx: { money: 3500, friends: 10, happiness: 8 } },
+      },
+    ],
+  },
+  {
+    id: 'inv_or',
+    category: 'investissement',
+    title: 'L’or, valeur refuge ?',
+    text: 'Avec les crises à répétition, un ami achète des pièces d’or « pour se protéger ». Il te propose de faire de même.',
+    minAge: 25,
+    cooldown: 15,
+    when: (s) => liquid(s) >= 5000,
+    choices: [
+      {
+        id: 'acheter',
+        label: 'Acheter 3 000 € de pièces d’or',
+        cost: 3000,
+        outcome: roll(0.55,
+          { text: 'Tu ranges tes pièces au coffre.', fx: { delayed: [{ years: 5, title: 'Tes pièces d’or', text: 'Le cours de l’or a bien progressé : tu revends tes pièces 4 600 €.', fx: { money: 4600 } }] } },
+          { text: 'Tu ranges tes pièces au coffre.', fx: { delayed: [{ years: 5, title: 'Tes pièces d’or', text: 'L’or a stagné. Tu revends tes pièces 2 900 €, frais compris.', fx: { money: 2900 } }] } }),
+      },
+      {
+        id: 'non',
+        label: 'Rester sur des placements diversifiés',
+        outcome: { text: 'Tu préfères la diversification.', fx: { skills: { finance: 1 } } },
+      },
+    ],
+  },
+  {
+    id: 'inv_cours_bourse',
+    category: 'investissement',
+    title: 'Les actions d’une seule entreprise',
+    text: 'Une entreprise technologique fait la une : son action a triplé en un an. Tout le monde veut sa part.',
+    minAge: 20,
+    cooldown: 10,
+    when: (s) => liquid(s) >= 3000 && nw(s) > 0,
+    choices: [
+      {
+        id: 'miser',
+        label: 'Acheter 2 000 € de cette action',
+        cost: 2000,
+        outcome: roll(0.4,
+          { text: 'Tu achètes, convaincu{|e} de son avenir.', fx: { delayed: [{ years: 3, title: 'L’action vedette', text: 'L’entreprise a tenu ses promesses : ta mise vaut 5 200 €. Tu vends.', fx: { money: 5200 } }] } },
+          { text: 'Tu achètes, convaincu{|e} de son avenir.', fx: { delayed: [{ years: 3, title: 'L’action vedette', text: 'Scandale comptable : l’action s’est effondrée. Il te reste 600 €.', fx: { money: 600, skills: { finance: 4 } } }] } }),
+      },
+      {
+        id: 'indice',
+        label: 'Préférer un fonds diversifié',
+        outcome: { text: 'Plutôt que de parier sur une seule entreprise, tu investis 2 000 € dans l’ensemble du marché.', fx: { stocks: 2000, skills: { finance: 3 } } },
+      },
+      {
+        id: 'non',
+        label: 'Ne rien faire',
+        outcome: { text: 'Tu regardes passer le train. Il ira où il voudra.' },
+      },
+    ],
+  },
+];

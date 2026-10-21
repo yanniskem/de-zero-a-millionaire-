@@ -1,0 +1,366 @@
+// Événements d'ouverture, propres à chaque profil de départ.
+
+import type { GameEvent } from '../../engine/eventTypes';
+import { roll } from './helpers';
+
+export const INTRO_EVENTS: GameEvent[] = [
+  {
+    id: 'intro_cocon',
+    profile: 'cocon',
+    category: 'depart',
+    title: 'Le grand saut ?',
+    text: 'Le bac en poche, tu passes l’été entre ta chambre et le canapé. Au dîner, ta mère pose la question qui fâche : « Bon, et maintenant, tu fais quoi ? »',
+    choices: [
+      {
+        id: 'job',
+        label: 'Trouver un emploi tout de suite',
+        hint: 'Un salaire dès maintenant, sans diplôme supplémentaire.',
+        outcome: { text: 'Tu décroches un poste de vente dans une enseigne du centre commercial. Ce n’est pas un rêve, mais c’est un début.', fx: { setJob: { jobId: 'vendeur' }, family: 4 } },
+      },
+      {
+        id: 'bts',
+        label: 'S’inscrire en BTS en alternance',
+        hint: 'Deux ans de formation payée, un bac+2 à la clé.',
+        outcome: roll(0.75,
+          { text: 'Une PME locale accepte de te prendre en alternance. Tu seras payé{e} pour apprendre la gestion.', fx: { startTraining: { trainingId: 'bts_gestion', mode: 'alternance' }, family: 6 } },
+          { text: 'Aucune entreprise n’a répondu à temps. Tu t’inscris finalement en BTS classique, sans salaire.', fx: { startTraining: { trainingId: 'bts_gestion', mode: 'full' }, family: 3 } }),
+      },
+      {
+        id: 'pause',
+        label: 'Prendre une année pour réfléchir',
+        hint: 'Du temps pour toi… et un peu de tension à la maison.',
+        outcome: { text: 'Tu voyages un peu, tu lis, tu fais du bénévolat. Tes parents grincent des dents, mais tu y vois plus clair.', fx: { happiness: 8, family: -6, skills: { social: 4, creative: 2 }, network: 3 } },
+      },
+    ],
+  },
+  {
+    id: 'intro_etudiant',
+    profile: 'etudiant',
+    category: 'depart',
+    title: 'La rentrée universitaire',
+    text: 'L’amphi est bondé, le studio minuscule, et ton compte en banque affiche une maigre somme. Il va falloir faire des choix pour cette première année.',
+    choices: [
+      {
+        id: 'focus',
+        label: 'Tout miser sur les études',
+        hint: 'Meilleure progression, budget très serré.',
+        outcome: { text: 'Bibliothèque, fiches, révisions : tu prends de l’avance et tes professeurs te remarquent.', fx: { skills: { finance: 4, manage: 2 }, network: 4, happiness: -2 } },
+      },
+      {
+        id: 'job',
+        label: 'Prendre un job étudiant le week-end',
+        hint: 'Environ 450 € par mois, mais moins d’énergie.',
+        outcome: { text: 'Tu trouves des missions le week-end dans un supermarché. Le frigo est mieux rempli, les dimanches plus courts.', fx: { sideGig: true, energy: -6, skills: { social: 2 } } },
+      },
+      {
+        id: 'asso',
+        label: 'S’engager dans l’association étudiante',
+        hint: 'Amis, réseau, mais quelques dépenses.',
+        outcome: { text: 'Soirées, projets, rencontres : tu te constitues un vrai cercle d’amis et des contacts utiles.', fx: { friends: 12, network: 8, money: -150, skills: { manage: 3, social: 3 } } },
+      },
+    ],
+  },
+  {
+    id: 'intro_bac_pro',
+    profile: 'bac_pro',
+    category: 'depart',
+    title: 'Premier vrai poste',
+    text: 'Ton bac pro maintenance en poche, ton ancien maître de stage t’appelle : l’usine du coin recrute. En parallèle, ton lycée te propose de continuer en BTS.',
+    choices: [
+      {
+        id: 'usine',
+        label: 'Postuler à l’usine comme technicien{|ne}',
+        hint: 'Un bon salaire d’entrée si ta candidature est retenue.',
+        outcome: roll(0.7,
+          { text: 'Ton maître de stage a appuyé ta candidature : tu es embauché{e} comme technicien{|ne} de maintenance !', fx: { setJob: { jobId: 'technicien_maintenance' }, network: 4 } },
+          { text: 'Le poste est attribué à quelqu’un de plus expérimenté. On te propose un poste en préparation de commandes en attendant.', fx: { setJob: { jobId: 'preparateur' }, happiness: -3 } }),
+      },
+      {
+        id: 'bts',
+        label: 'Poursuivre en BTS en alternance',
+        hint: 'Plus long, mais un diplôme bac+2 très demandé.',
+        outcome: { text: 'Tu signes un contrat d’alternance avec l’usine. Deux ans à alterner atelier et salle de cours.', fx: { startTraining: { trainingId: 'bts_tech', mode: 'alternance' }, family: 5 } },
+      },
+      {
+        id: 'interim',
+        label: 'Faire de l’intérim pour voir du pays',
+        hint: 'De l’argent vite, de l’expérience variée.',
+        outcome: { text: 'Missions courtes, primes de précarité, entreprises variées : tu gagnes bien ta vie et tu découvres plein de métiers.', fx: { setJob: { jobId: 'preparateur' }, money: 900, network: 5, skills: { craft: 2 } } },
+      },
+    ],
+  },
+  {
+    id: 'intro_sans_diplome',
+    profile: 'sans_diplome',
+    category: 'depart',
+    title: 'Le conseiller de France Travail',
+    text: 'Dans un bureau gris, un conseiller fatigué mais bienveillant feuillette ton dossier. « Sans diplôme, ce sera plus dur. Mais il y a des pistes. »',
+    choices: [
+      {
+        id: 'resto',
+        label: 'Accepter un poste en restauration rapide',
+        hint: 'Un salaire tout de suite, un travail physique.',
+        outcome: { text: 'Le restaurant du centre commercial t’embauche dès lundi. Les horaires sont durs, mais la paie tombe.', fx: { setJob: { jobId: 'equipier' } } },
+      },
+      {
+        id: 'cap',
+        label: 'Préparer un CAP électricien en alternance',
+        hint: 'Deux ans, payé, pour un vrai métier.',
+        outcome: roll(0.7,
+          { text: 'Un artisan du quartier accepte de te former. Tu vas apprendre un métier, et être payé{e} pour ça.', fx: { startTraining: { trainingId: 'cap_elec', mode: 'alternance' }, happiness: 5 } },
+          { text: 'Pas d’employeur pour l’alternance cette année. Tu commences le CAP en lycée professionnel, sans salaire.', fx: { startTraining: { trainingId: 'cap_elec', mode: 'full' } } }),
+      },
+      {
+        id: 'secu',
+        label: 'Suivre la formation d’agent de sécurité (financée)',
+        hint: 'Gratuite, en cours du soir, elle ouvre un métier.',
+        outcome: { text: 'France Travail finance ta formation. Dans un an, tu pourras travailler dans la sécurité privée.', fx: { startTraining: { trainingId: 'cqp_aps', mode: 'part' }, skills: { social: 2 } } },
+      },
+    ],
+  },
+  {
+    id: 'intro_heritier',
+    profile: 'heritier',
+    category: 'depart',
+    title: 'L’héritage de Mamie Jeanne',
+    text: 'Le notaire te tend les papiers : 60 000 € sont désormais à toi. Ton oncle te conseille la bourse, tes amis un road-trip, ta banquière « un produit maison ».',
+    choices: [
+      {
+        id: 'bourse',
+        label: 'Investir 30 000 € en fonds indiciels',
+        hint: 'Placement de long terme, avec des hauts et des bas.',
+        outcome: { text: 'Tu ouvres un compte et achètes des fonds qui répliquent les grandes bourses mondiales. Ton oncle est fier de toi.', fx: { savings: -30000, stocks: 30000, skills: { finance: 6 }, highlight: { kind: 'key', text: 'Premier gros investissement en bourse à 18 ans' } } },
+      },
+      {
+        id: 'plaisir',
+        label: 'S’offrir une voiture et un grand voyage',
+        hint: 'On ne vit qu’une fois… mais l’argent ne revient pas.',
+        outcome: { text: 'Une belle voiture, trois mois en Asie, des souvenirs pour la vie. Ton compte, lui, a nettement maigri.', fx: { money: -22000, happiness: 12, friends: 6, flags: { voiture: true }, highlight: { kind: 'mistake', text: 'Un tiers de l’héritage dépensé en quelques mois' } } },
+      },
+      {
+        id: 'prudence',
+        label: 'Tout laisser sur le livret et apprendre',
+        hint: 'Sécurité maximale, rendement modeste.',
+        outcome: { text: 'Tu ne touches à rien et tu dévores des livres sur l’argent. Tu veux comprendre avant d’agir.', fx: { skills: { finance: 10 }, happiness: 2 } },
+      },
+    ],
+  },
+  {
+    id: 'intro_pilier',
+    profile: 'pilier',
+    category: 'depart',
+    title: 'Les factures de la maison',
+    text: 'Ta mère enchaîne les heures de ménage et toi les services au fast-food. Chaque mois, tu lui verses 250 €. Ce soir, elle te dit qu’elle se sent coupable de te freiner.',
+    choices: [
+      {
+        id: 'continuer',
+        label: 'Continuer à l’aider comme avant',
+        hint: 'La famille d’abord.',
+        outcome: { text: 'Tu la rassures : c’est normal. Vous êtes une équipe. Cette solidarité vous rapproche encore.', fx: { family: 8, happiness: 2 } },
+      },
+      {
+        id: 'reduire',
+        label: 'Réduire l’aide à 120 € pour épargner',
+        hint: 'Un peu plus de marge pour toi.',
+        outcome: { text: 'Vous en parlez franchement et trouvez un équilibre. Tu peux enfin mettre un peu de côté.', fx: { familyContribution: 120, family: -3, happiness: 3 } },
+      },
+      {
+        id: 'soin',
+        label: 'Se former au métier d’aide-soignant',
+        hint: 'Formation gratuite, un métier qui a du sens.',
+        outcome: { text: 'Tu quittes le fast-food pour une formation d’un an. Ta mère t’encourage, quitte à se serrer la ceinture. Une bourse t’aide un peu.', fx: { startTraining: { trainingId: 'deas', mode: 'full' }, flags: { boursier: true }, familyContribution: 100, family: 5 } },
+      },
+    ],
+  },
+  {
+    id: 'intro_reveur',
+    profile: 'reveur',
+    category: 'depart',
+    title: 'La vocation',
+    text: 'Ton carnet de croquis déborde. Une école de design t’accepte, mais coûte 4 000 €. Ton père, lui, a déjà rempli ton inscription en licence d’économie.',
+    choices: [
+      {
+        id: 'design',
+        label: 'Suivre sa vocation (prêt étudiant)',
+        hint: 'Un an pour devenir graphiste, avec un prêt de 4 000 €.',
+        outcome: { text: 'Tu signes le prêt et entres à l’école de design. Ton père ne t’adresse plus la parole pendant un mois.', fx: { addDebt: { kind: 'etudiant', label: 'Prêt étudiant (école de design)', amount: 4000, rate: 0.015, years: 7 }, money: -4000, startTraining: { trainingId: 'formation_design', mode: 'full' }, family: -8, happiness: 8, highlight: { kind: 'key', text: 'Choisir sa vocation artistique contre l’avis de sa famille' } } },
+      },
+      {
+        id: 'alimentaire',
+        label: 'Un job alimentaire, le dessin le soir',
+        hint: 'Indépendance financière, passion en parallèle.',
+        outcome: { text: 'Le jour, tu travailles en boutique. La nuit, tu dessines. Ton portfolio grossit doucement.', fx: { setJob: { jobId: 'vendeur' }, skills: { creative: 4 }, energy: -5 } },
+      },
+      {
+        id: 'licence',
+        label: 'Faire plaisir à ta famille : licence d’économie',
+        hint: 'La voie « raisonnable ».',
+        outcome: { text: 'Tu t’inscris en licence. Tes parents sont rassurés. Toi, un peu moins.', fx: { startTraining: { trainingId: 'licence_eco', mode: 'full' }, family: 10, happiness: -6 } },
+      },
+    ],
+  },
+  {
+    id: 'intro_debrouillard',
+    profile: 'debrouillard',
+    category: 'depart',
+    title: 'Le coup de feu',
+    text: 'Deux ans en brigade, et ton chef commence à te faire confiance. Un ami te parle d’une saison d’hiver en station, très bien payée, logé et nourri.',
+    choices: [
+      {
+        id: 'rester',
+        label: 'Rester et monter en grade',
+        hint: 'Gagner la confiance du chef.',
+        outcome: { text: 'Tu restes. Ton chef te confie le poste chaud. Tu progresses vite.', fx: { performance: 12, skills: { craft: 4 }, network: 3 } },
+      },
+      {
+        id: 'saison',
+        label: 'Partir faire la saison d’hiver',
+        hint: 'Gros salaire temporaire, retour incertain.',
+        outcome: roll(0.75,
+          { text: 'Cinq mois intenses à la montagne : tu reviens avec un beau pécule, et ton ancien chef te reprend.', fx: { money: 4200, friends: 4, network: 6, energy: -8 } },
+          { text: 'La saison est bonne, mais à ton retour ton poste a été donné à un autre. Il faut chercher ailleurs.', fx: { money: 4200, loseJob: 'demission', happiness: -4 } }),
+      },
+      {
+        id: 'chef',
+        label: 'Demander à apprendre la gestion du restaurant',
+        hint: 'Préparer l’avenir… peut-être ton propre restaurant.',
+        outcome: { text: 'Le patron te montre les commandes, les marges, les plannings. Tu comprends enfin comment tourne la maison.', fx: { skills: { manage: 6, finance: 4 }, flags: { reveRestaurant: true } } },
+      },
+    ],
+  },
+  {
+    id: 'intro_metropole',
+    profile: 'metropole',
+    category: 'depart',
+    title: 'Bienvenue en ville',
+    text: 'Ton studio coûte presque 800 € par mois. Tu ne connais personne, mais la ville bouillonne d’opportunités. Par où commencer ?',
+    choices: [
+      {
+        id: 'job',
+        label: 'Trouver vite un emploi dans la vente',
+        hint: 'Payer le loyer avant tout.',
+        outcome: { text: 'Une grande enseigne du centre-ville t’embauche. Le loyer est assuré.', fx: { setJob: { jobId: 'vendeur' } } },
+      },
+      {
+        id: 'coloc',
+        label: 'Passer en colocation pour économiser',
+        hint: 'Loyer divisé, amis assurés.',
+        outcome: { text: 'Tu rejoins une colocation de quatre personnes. Moins d’intimité, mais des amis dès la première semaine.', fx: { housingId: 'coloc', friends: 15, money: -300 } },
+      },
+      {
+        id: 'reseau',
+        label: 'Écumer les événements de réseautage',
+        hint: 'Investir dans les rencontres.',
+        outcome: { text: 'Afterworks, conférences, salons : tu distribues ton numéro partout. Un contact te propose un poste de commercial à l’essai.', fx: { network: 12, money: -250, setJob: { jobId: 'vendeur', salaryPct: 5 }, skills: { social: 3 } } },
+      },
+    ],
+  },
+  {
+    id: 'intro_entrepreneur',
+    profile: 'entrepreneur',
+    category: 'depart',
+    title: 'L’idée du siècle',
+    text: 'Tu as remarqué que les baskets d’occasion se revendent très bien en ligne. Avec 8 000 € de côté, tu pourrais lancer ta boutique dès maintenant.',
+    choices: [
+      {
+        id: 'lancer',
+        label: 'Lancer sa boutique en ligne (5 000 €)',
+        hint: 'Le grand saut, tout de suite.',
+        outcome: { text: 'Statuts déposés, site en ligne, premier stock acheté : ton entreprise est née. Il faudra maintenant trouver des clients.', fx: { savings: -5000, startBusiness: { sector: 'ecommerce', capital: 5000, name: 'Seconde Foulée' }, happiness: 6, highlight: { kind: 'key', text: 'Création de sa première entreprise à 18 ans' } } },
+      },
+      {
+        id: 'bts',
+        label: 'Apprendre d’abord : BTS gestion en alternance',
+        hint: 'Se former avant de risquer son capital.',
+        outcome: { text: 'Tu entres en alternance dans un cabinet comptable. Tu verras de l’intérieur comment vivent (et meurent) les entreprises.', fx: { startTraining: { trainingId: 'bts_gestion', mode: 'alternance' }, skills: { finance: 3 } } },
+      },
+      {
+        id: 'vente',
+        label: 'Devenir vendeur et garder son capital',
+        hint: 'Sécuriser, observer, attendre le bon moment.',
+        outcome: { text: 'Tu prends un poste de vendeur en magasin de sport. Tes économies dorment, ton idée mûrit.', fx: { setJob: { jobId: 'vendeur' }, skills: { social: 2 } } },
+      },
+    ],
+  },
+  {
+    id: 'intro_codeur',
+    profile: 'codeur',
+    category: 'depart',
+    title: 'Coder pour vivre ?',
+    text: 'Un commerçant de ta ville a vu le site que tu as fait pour le club de foot. Il veut le même. D’autres pourraient suivre… ou tu pourrais faire les choses dans l’ordre.',
+    choices: [
+      {
+        id: 'freelance',
+        label: 'Enchaîner les petits sites en freelance',
+        hint: 'De l’argent tout de suite, sans diplôme.',
+        outcome: { text: 'Le bouche-à-oreille fonctionne : cinq sites livrés dans l’année. Tu apprends aussi à négocier.', fx: { money: 2800, skills: { tech: 4, social: 4 }, network: 6 } },
+      },
+      {
+        id: 'licence',
+        label: 'Faire une licence informatique',
+        hint: 'Trois ans pour un diplôme reconnu.',
+        outcome: { text: 'Tu t’inscris à l’université. Les premiers cours te paraissent faciles, l’algorithmique beaucoup moins.', fx: { startTraining: { trainingId: 'licence_info', mode: 'full' }, family: 6 } },
+      },
+      {
+        id: 'support',
+        label: 'Postuler comme technicien{|ne} support',
+        hint: 'Un premier poste en entreprise.',
+        outcome: { text: 'Ton entretien technique impressionne : tu rejoins le support informatique d’une PME.', fx: { setJob: { jobId: 'technicien_support' } } },
+      },
+    ],
+  },
+  {
+    id: 'intro_rural',
+    profile: 'rural',
+    category: 'depart',
+    title: 'Partir ou rester ?',
+    text: 'Au village, tes amis d’enfance restent presque tous. L’usine de plasturgie embauche. Mais la grande ville, à deux heures de route, t’attire.',
+    choices: [
+      {
+        id: 'usine',
+        label: 'Rester et entrer à l’usine',
+        hint: 'Stabilité, vie peu chère, proches à côté.',
+        outcome: { text: 'Tu prends ton poste à l’usine. Le samedi, c’est foot et barbecue avec les copains.', fx: { setJob: { jobId: 'preparateur' }, family: 4, friends: 4 } },
+      },
+      {
+        id: 'ville',
+        label: 'Partir s’installer en ville',
+        hint: 'Plus d’opportunités, moins d’attaches.',
+        outcome: { text: 'Tu loues un studio en ville. Ta mère pleure un peu sur le pas de la porte.', fx: { housingId: 'studio', family: -6, friends: -10, network: 8, money: -900, happiness: 3 } },
+      },
+      {
+        id: 'cap',
+        label: 'Apprendre le métier d’électricien chez l’artisan du village',
+        hint: 'Un CAP en alternance, et peut-être reprendre l’affaire un jour.',
+        outcome: { text: 'Le vieil électricien du village accepte de te former. « Dans dix ans, je prends ma retraite », glisse-t-il.', fx: { startTraining: { trainingId: 'cap_elec', mode: 'alternance' }, flags: { repriseArtisan: true }, network: 3 } },
+      },
+    ],
+  },
+  {
+    id: 'intro_endette',
+    profile: 'endette',
+    category: 'depart',
+    title: 'La mensualité',
+    text: 'Ta voiture est magnifique. Ton premier bulletin de salaire, un peu moins. Après la mensualité du crédit, il ne te reste pas grand-chose.',
+    choices: [
+      {
+        id: 'vendre',
+        label: 'Revendre la voiture pour solder le crédit',
+        hint: 'Repartir de zéro, sans dette.',
+        outcome: { text: 'Tu revends la voiture 6 200 €. Avec un peu d’aide de tes parents, le crédit est soldé. Retour au bus, mais l’esprit léger.', fx: { money: 7000, repayDebts: 'conso', flags: { voiture: false }, happiness: -3, skills: { finance: 5 }, highlight: { kind: 'key', text: 'Revendre sa voiture pour se libérer de sa dette' } } },
+      },
+      {
+        id: 'heures',
+        label: 'Multiplier les heures supplémentaires',
+        hint: 'Plus d’argent, moins d’énergie.',
+        outcome: { text: 'Samedis, nocturnes, inventaires : tu acceptes tout. Ta paie gonfle, ton énergie fond.', fx: { money: 1400, performance: 10, energy: -10 } },
+      },
+      {
+        id: 'assumer',
+        label: 'Assumer et rembourser normalement',
+        hint: 'Quatre ans de mensualités.',
+        outcome: { text: 'Tu fais avec. Le crédit sera remboursé dans quatre ans. D’ici là, prudence.', fx: { skills: { finance: 2 } } },
+      },
+    ],
+  },
+];
