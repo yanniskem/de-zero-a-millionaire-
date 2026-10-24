@@ -22,7 +22,9 @@ const failures = [];
 const check = (cond, msg) => { if (cond) log('OK', msg); else { failures.push(msg); console.log('✗ ÉCHEC', msg); } };
 
 const launch = { executablePath: process.env.CHROMIUM_PATH || undefined };
-try { await chromium.launch(launch).then((b) => b.close()); } catch { launch.executablePath = undefined; }
+// Pour tester une URL publique derrière un proxy sortant (HTTPS_PROXY), Chromium doit passer par ce proxy.
+if (process.env.E2E_URL && process.env.HTTPS_PROXY) launch.proxy = { server: process.env.HTTPS_PROXY };
+try { await chromium.launch(launch).then((b) => b.close()); } catch { delete launch.executablePath; }
 const browser = await chromium.launch(launch);
 
 async function scenario(name, viewport) {
